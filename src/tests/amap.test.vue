@@ -3,8 +3,10 @@
 :meta="map_meta"
 :polygons="polygons"
 :pins="pins"
+:labels="labels"
 v-on:click-polygon="map_click"
 v-on:click-pin="pin_click" 
+v-on:click-label="label_click"
 v-on:map-move="area_change"
 ></amap>
 </template>
@@ -25,15 +27,29 @@ export default {
       // this.$set( this.polygons[idx], 'fillColor', '#8ae3fa' );
       var color = [ 'red', 'white', '#8ae3fa', '#98273a', '#6bf23s' ][Math.floor( Math.random() * 5 )];
       this.$set( this.polygons, idx, { ...this.polygons[idx], fillColor: color } )
+        if ( Math.random() < .1 ) {
+            this.polygons= [];
+        }
     },
     pin_click ( e ) {
       var idx = this.pins.findIndex( x=> x.id == '1' );
       var obj = this.pins[idx];
       obj.image = ( obj.image == url2 ) ? url : url2;
       this.$set( this.pins, idx, obj );
+        if ( Math.random() < .1 ) {
+            this.pins= [];
+        }
+    },
+    label_click ( e ) {
+        var idx = this.labels.findIndex( x=> x.id == '1' );
+        var obj = this.labels[idx];
+        obj.style['background-color'] = [ 'red', 'white', '#8ae3fa', '#98273a', '#6bf23s' ][Math.floor( Math.random() * 5 )];
+        this.$set( this.labels, idx, obj );
+        if ( Math.random() < .1 ) {
+            this.labels = [];
+        }
     },
     area_change( e ) {
-      console.log( e );
     }
   },
   data () {
@@ -44,6 +60,20 @@ export default {
         zoom: 16,
         mapStyle: 'amap://styles/grey'
       },
+      labels : [
+        {
+            id: '1',
+            text : '余杭',
+            lng: 119.921213,
+            lat: 30.407693,
+            style : {
+                'color': '#fff',
+                'background-color' : '#469a21',
+                'padding' : '2px 6px',
+                'font-size' : '12px',
+            }
+        }
+      ],
       pins : [
         {
           id: '1',

@@ -62,6 +62,7 @@ export default {
             this.drawPolygons();
             this.drawPins();
             this.moveCenter();
+            this.drawLabels();
         }
     },
 
@@ -99,11 +100,31 @@ export default {
         },
 
         drawLabels () {
+            let ols = this.mapObj.getAllOverlays( 'text' );
+            this.mapObj.remove( ols );
 
+            this.labels.forEach( p => {
+                let label = new AMap.Text( {
+                    text : p.text,
+                    textAlign : p.textAlign || 'center',
+                    verticalAlign : p.verticalAlign || 'middle',
+                    position: [ p.lng, p.lat ],
+                    cursor : p.cursor || 'default',
+                    style : p.style || {},
+                    extData : p.id,
+                } );
+                label.setMap( this.mapObj );
+                label.on ( 'click', ( e ) => {
+                    this.$emit( 'click-label', e );
+                    this.$emit( 'click', e );
+                } ).on( 'dblclick', ( e ) => {
+                    this.$emit( 'dblclick-label', e );
+                    this.$emit( 'dblclick', e );
+                } );
+            } );
         },
 
         drawDots () {
-
         },
 
         drawPins () {
@@ -144,32 +165,54 @@ export default {
         polygons ( newObj, oldObj ) {
             let polygon_list = this.mapObj.getAllOverlays( 'polygon' );
 
-            for ( let np of newObj ) {
-                polygon_list.find( x=> x.getExtData() == np.id ).setOptions( {
-                    zIndex: np.zIndex || 1,
-                    path: np.path,
-                    bubble : np.bubble || false,
-                    cursor : np.cursor || undefined,
-                    strokeColor: np.strokeColor || '#fff',
-                    strokeOpacity: np.strokeOpacity || 1,
-                    strokeWeight: np.strokeWeight || 3,
-                    fillColor: np.fillColor || '#fff',
-                    fillOpacity: np.fillOpacity || .5,
-                    extData: np.id,
-                    strokeStyle : np.strokeStyle || "solid",
-                } )
+            for ( let polygon of polygon_list ) {
+                let np = newObj.find( x => x.id == polygon.getExtData() );
+                if ( np ) {
+                    polygon.setOptions( {
+                        zIndex: np.zIndex || 1,
+                        path: np.path,
+                        bubble : np.bubble || false,
+                        cursor : np.cursor || undefined,
+                        strokeColor: np.strokeColor || '#fff',
+                        strokeOpacity: np.strokeOpacity || 1,
+                        strokeWeight: np.strokeWeight || 3,
+                        fillColor: np.fillColor || '#fff',
+                        fillOpacity: np.fillOpacity || .5,
+                        extData: np.id,
+                        strokeStyle : np.strokeStyle || "solid",
+                    } );
+                } else {
+                    this.mapObj.remove( polygon );
+                }
             }
         },
         pins ( newObj, oldObj ) {
             let pin_list = this.mapObj.getAllOverlays( 'marker' );
-            for ( let np of newObj ) {
-                let icon = new AMap.Icon( {
-                    image : np.image || undefined,
-                } );
-
-                let pin = pin_list.find( x=> x.getExtData() == np.id );
-                pin.setIcon( icon );
-                pin.setPosition( [np.lng, np.lat ] );
+            for ( let pin of pin_list ) {
+                let np = newObj.find( x=> x.id == pin.getExtData() );
+                if ( np ) {
+                    let icon = new AMap.Icon( {
+                        image : np.image || undefined,
+                    } );
+                    pin.setIcon( icon );
+                    pin.setPosition( [np.lng, np.lat ] );
+                } else {
+                    this.mapObj.remove( pin );
+                }
+            }
+        },
+        labels ( newObj, oldObj ) {
+            let label_list = this.mapObj.getAllOverlays( 'text' );
+            for ( let label of label_list ) {
+                let np = newObj.find( x => x.id == label.getExtData() );
+                if ( np ) {
+                    label.setText( np.text );
+                    label.setStyle( np.style || {} );
+                    label.setPosition( [ np.lng, np.lat ] );
+                    label.setCursor( np.cursor || 'default' );
+                } else {
+                    this.mapObj.remove( label );
+                }
             }
         }
     }
